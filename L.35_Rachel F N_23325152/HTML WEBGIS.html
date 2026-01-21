@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SI-KRT - Sistem Informasi Kawasan Rawan Tsunami</title>
+
+  <style>
+    :root {
+      /* Warna Dasar - Lebih Kaya */
+      --bg:#050b14; 
+      --card-bg: rgba(15, 23, 42, 0.6); /* Transparan untuk Glassmorphism */
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text:#f1f5f9; 
+      --muted:#94a3b8;
+      --accent:#06b6d4; 
+      --accent-glow: rgba(6, 182, 212, 0.5);
+      
+      /* Warna Klasifikasi 5 Tingkat dengan Efek Cahaya */
+      --col-safe: #10b981;      /* Hijau - Aman */
+      --glow-safe: rgba(16, 185, 129, 0.4);
+      
+      --col-vlow: #22d3ee;      /* Cyan - Sangat Rendah */
+      --glow-vlow: rgba(34, 211, 238, 0.4);
+      
+      --col-low: #f59e0b;       /* Kuning - Rendah */
+      --glow-low: rgba(245, 158, 11, 0.4);
+      
+      --col-high: #f97316;      /* Orange - Tinggi */
+      --glow-high: rgba(249, 115, 22, 0.5);
+      
+      --col-vhigh: #ef4444;     /* Merah - Sangat Tinggi */
+      --glow-vhigh: rgba(239, 68, 68, 0.6);
+    }
+
+    *{box-sizing:border-box; outline: none;}
+    body{
+      margin:0; color:var(--text);
+      background: radial-gradient(circle at 10% 10%, #1e293b, #050b14 60%);
+      font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* HEADER STYLE - Mewah & Transparan */
+    .header{
+      position:sticky; top:0; z-index:50;
+      background: rgba(5, 11, 20, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--glass-border);
+      padding:30px 20px;
+      text-align:center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Logo Container */
+    .header-logo {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(0,0,0,0));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 25px var(--accent-glow);
+      flex-shrink: 0;
+    }
+
+    .header-logo svg {
+      width: 36px;
+      height: 36px;
+      fill: var(--accent);
+      filter: drop-shadow(0 0 5px var(--accent));
+    }
+
+    /* Tipografi Header */
+    .header-main-title {
+      font-size: 2.8rem; 
+      font-weight: 800;
+      margin: 0;
+      line-height: 1.1;
+      letter-spacing: 1px;
+      background: linear-gradient(120deg, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(255,255,255,0.1);
+    }
+
+    .header-sub-title {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin: 0;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .header-description {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.7;
+      max-width: 800px;
+      margin: 5px 0;
+      font-weight: 300;
+    }
+
+    .header-location {
+      margin-top: 5px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: rgba(255,255,255,0.03);
+      padding: 8px 20px;
+      border-radius: 50px;
+      border: 1px solid var(--glass-border);
+      display: inline-block;
+    }
+
+    /* MAIN CONTAINER */
+    .container{max-width:1280px;margin:30px auto;padding:0 20px}
+    
+    /* TABS - Glass Pill Design */
+    .tabs{display:flex;gap:15px;margin-bottom:30px;justify-content:center; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 50px; width: fit-content; margin-left: auto; margin-right: auto; border: 1px solid var(--glass-border);}
+
+    .tab-btn{
+      background:transparent;
+      border:none;
+      color:var(--muted);
+      padding:12px 30px;
+      border-radius:40px;
+      cursor:pointer;
+      font-weight:600;
+      font-size: 0.95rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .tab-btn:hover{
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+    .tab-btn.active{
+      background: linear-gradient(135deg, var(--accent), #0891b2);
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* MAP PANEL GRID */
+    .map-panel{
+      display:grid;
+      grid-template-columns:1fr 320px;
+      gap:25px;
+    }
+
+    /* CARD STYLE - Premium Glass */
+    .map-card{
+      position:relative;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border:1px solid var(--glass-border);
+      border-radius:24px;
+      overflow:hidden;
+      min-height:650px;
+      box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
+      transition: border-color 0.3s;
+    }
+    .map-card:hover {
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .map-title{
+      position:absolute;top:20px;left:50%;
+      transform:translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      padding:10px 24px;border-radius:30px;
+      z-index:5;font-weight:700;
+      font-size:1rem;
+      text-align:center;
+      border:1px solid var(--glass-border);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    
+    .map-title::before {
+      content:''; display:block; width:10px; height:10px; 
+      background:var(--accent); border-radius:50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
+    }
+
+    /* INFO SIDEBAR - Premium */
+    .info-card{
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border:1px solid var(--glass-border);
+      border-radius:24px;
+      padding:25px;
+      font-size:.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: 650px;
+      overflow-y: auto; 
+      box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3);
+    }
+    
+    .info-card::-webkit-scrollbar { width: 6px; }
+    .info-card::-webkit-scrollbar-track { background: transparent; }
+    .info-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+    .info-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* --- STYLE KREATIF: DATA DETAIL (MEWAH & CAHAYA) --- */
+    .data-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+      width: 100%;
+    }
+
+    .data-card {
+      /* Glassmorphism Card */
+      background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 25px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hover Effect - Mewah */
+    .data-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      z-index: 10;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+
+    /* Dynamic Glow Border based on Risk */
+    .data-card.risk-safe { border-color: var(--col-safe); box-shadow: 0 0 0 1px rgba(16,185,129,0.2), inset 0 0 20px rgba(16,185,129,0.05); }
+    .data-card.risk-low { border-color: var(--col-low); box-shadow: 0 0 0 1px rgba(245,158,11,0.2), inset 0 0 20px rgba(245,158,11,0.05); }
+    .data-card.risk-high { border-color: var(--col-high); box-shadow: 0 0 0 1px rgba(249,115,22,0.2), inset 0 0 20px rgba(249,115,22,0.05); }
+    .data-card.risk-vhigh { border-color: var(--col-vhigh); box-shadow: 0 0 0 1px rgba(239,68,68,0.3), inset 0 0 20px rgba(239,68,68,0.1); }
+    
+    /* Hover Glow */
+    .data-card.risk-safe:hover { box-shadow: 0 0 30px var(--glow-safe); }
+    .data-card.risk-low:hover { box-shadow: 0 0 30px var(--glow-low); }
+    .data-card.risk-high:hover { box-shadow: 0 0 30px var(--glow-high); }
+    .data-card.risk-vhigh:hover { box-shadow: 0 0 40px var(--glow-vhigh); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .district-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .risk-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px currentColor;
+    }
+    .bg-safe { background: var(--col-safe); color: #fff; box-shadow: 0 0 10px var(--col-safe); }
+    .bg-vlow { background: var(--col-vlow); color: #000; box-shadow: 0 0 10px var(--col-vlow); }
+    .bg-low { background: var(--col-low); color: #000; box-shadow: 0 0 10px var(--col-low); }
+    .bg-high { background: var(--col-high); color: #fff; box-shadow: 0 0 10px var(--col-high); }
+    .bg-vhigh { background: var(--col-vhigh); color: #fff; box-shadow: 0 0 15px var(--col-vhigh); animation: pulse-badge 2s infinite; }
+
+    @keyframes pulse-badge { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+
+    /* Creative Risk Bar - Neon Style */
+    .risk-section {
+      margin-bottom: 25px;
+    }
+    .risk-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .risk-track {
+      height: 12px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .risk-fill {
+      height: 100%;
+      border-radius: 6px;
+      /* Neon Glow Effect inside bar */
+      filter: drop-shadow(0 0 5px currentColor); 
+      width: 0%; 
+      position: relative;
+      animation: fillBar 1.8s ease-out forwards;
+    }
+    /* Shine effect on bar */
+    .risk-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: translateX(-100%);
+      animation: shine 2s infinite;
+    }
+
+    @keyframes fillBar { to { width: var(--target-width); } }
+    @keyframes shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .stat-item {
+      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat-item svg { width: 18px; color: var(--accent); opacity: 0.8; }
+    .stat-val { color: #fff; font-weight: 700; display: block; font-size: 0.95rem; }
+    .stat-lbl { color: var(--muted); font-size: 0.75rem; display: block; margin-top: 2px; }
+
+    /* --- STYLE KONTAK DARURAT --- */
+    .emergency-section {
+      margin-top: 15px;
+      padding-top: 20px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .emergency-header {
+      color: var(--col-vhigh);
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: glow-red 2s infinite alternate;
+    }
+    @keyframes glow-red { from { text-shadow: 0 0 5px rgba(239,68,68,0.2); } to { text-shadow: 0 0 15px rgba(239,68,68,0.8); } }
+
+    .contact-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 15px;
+      transition: transform 0.3s;
+    }
+    .contact-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.3); }
+    .contact-card.bpbd-card { border-left: 4px solid var(--accent); }
+    .contact-card.posko-card {
+      border-left: 4px solid var(--col-vhigh);
+      background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0));
+    }
+
+    .org-name { font-weight: 700; color: #fff; display: block; margin-bottom: 8px; font-size: 1rem; }
+    .org-detail { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; line-height: 1.5; }
+    .org-detail svg { width: 14px; height: 14px; opacity: 0.8; flex-shrink: 0; }
+    
+    .contact-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+    .btn-contact {
+      flex: 1; text-decoration: none; padding: 10px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 600; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.3s; letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: rgba(34,211,238,0.1); color: var(--accent); border: 1px solid rgba(34,211,238,0.3);
+    }
+    .btn-primary:hover { background: rgba(34,211,238,0.2); box-shadow: 0 0 15px var(--accent-glow); }
+    
+    .btn-danger {
+      background: var(--col-vhigh); color: #fff; font-weight: 800;
+      box-shadow: 0 0 20px rgba(239,68,68,0.4);
+      animation: pulse-red-btn 2s infinite;
+    }
+    .btn-danger:hover { background: #dc2626; transform: scale(1.05); }
+    @keyframes pulse-red-btn { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+    /* LEGEND STYLE EXISTING */
+    .legend-group { display: flex; flex-direction: column; gap: 12px; }
+    .legend-item{ display:flex;align-items:center;gap:12px; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.02); transition: all 0.3s; }
+    .legend-item:hover { background: rgba(255,255,255,0.05); transform: translateX(5px); }
+    
+    .swatch{ width:24px;height:24px;border-radius:6px; box-shadow: 0 0 10px currentColor; }
+    .swatch-safe{background:var(--col-safe); color: var(--col-safe);}
+    .swatch-vlow{background:var(--col-vlow); color: var(--col-vlow);}
+    .swatch-low{background:var(--col-low); color: var(--col-low);}
+    .swatch-high{background:var(--col-high); color: var(--col-high);}
+    .swatch-vhigh{background:var(--col-vhigh); color: var(--col-vhigh);}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .map-panel{grid-template-columns:1fr}
+      .map-card{min-height:500px}
+      .header-main-title { font-size: 2rem; }
+      .data-container { grid-template-columns: 1fr; }
+    }
+    @media(max-width:480px){
+      .header { padding: 20px; gap: 10px; }
+      .header-main-title { font-size: 1.6rem; }
+      .header-sub-title { font-size: 0.9rem; }
+      .header-description { font-size: 0.85rem; text-align: justify; text-align-last: center; }
+      .header-location { font-size: 0.7rem; }
+      .info-card { max-height: none; }
+      .tabs { width: 100%; border-radius: 12px; overflow-x: auto; justify-content: flex-start; }
+      .tab-btn { white-space: nowrap; padding: 10px 20px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <!-- LOGO KUSTOM SVG -->
+  <div class="header-logo">
+    <!-- Ikon Perisai & Gelombang -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L3 7V12C3 17.52 6.84 22.74 12 24C17.16 22.74 21 17.52 21 12V7L12 2Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 6C9.5 6 7.5 7.5 7.5 9.5C7.5 12 10 14 12 14C14 14 16.5 12 16.5 9.5C16.5 7.5 14.5 6 12 6Z" fill="rgba(6,182,212,0.2)" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M12 18V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M8 16L12 18L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="header-text">
+    <!-- JUDUL UTAMA -->
+    <h1 class="header-main-title">SI-KRT</h1>
+    
+    <!-- SUB JUDUL -->
+    <div class="header-sub-title">Sistem Informasi Kawasan Rawan Tsunami</div>
+    
+    <!-- DESKRIPSI -->
+    <p class="header-description">
+      Sistem Informasi Realtime Premium untuk memantau kawasan rawan Tsunami di Kabupaten Gunungsitoli, 
+      Provinsi Sumatera Utara. Dashboard ini diperbarui secara berkala untuk memberikan informasi akurat 
+      kepada masyarakat dan pemangku kepentingan.
+    </p>
+    
+    <!-- LOKASI (BADGE) -->
+    <div class="header-location">Kabupaten Gunungsitoli, Sumatera Utara</div>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-2d">Peta 2D</button>
+    <button class="tab-btn" data-tab="tab-3d">Peta 3D</button>
+    <!-- Teks "Kreatif" dihapus -->
+    <button class="tab-btn" data-tab="tab-data">Data Detail</button>
+  </div>
+
+  <!-- ================= 2D SECTION ================= -->
+  <section id="tab-2d" class="map-panel">
+    <div class="map-card">
+      <div class="map-title">Peta Sebaran Rawan Tsunami</div>
+      <iframe src="https://www.arcgis.com/apps/mapviewer/index.html?webmap=edcf0db8b961474c876c1ca5a6abdd32"></iframe>
+    </div>
+    
+    <!-- INFO SIDEBAR -->
+    <aside class="info-card">
+      
+      <!-- 1. KLASIFIKASI LEGENDA -->
+      <div class="info-header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        Klasifikasi Risiko
+      </div>
+      <div style="font-size:0.85rem; color:var(--muted); margin-bottom:10px;">
+        Berdasarkan elevasi topografi & jarak dari garis pantai.
+      </div>
+      
+      <div class="legend-group">
+        <!-- 1. Aman -->
+        <div class="legend-item">
+          <span class="swatch swatch-safe"></span>
+          <div>
+            <div style="font-weight:600; color:#fff">Aman</div>
+            <div style="font-size:0.75rem; color:var(--muted)">Zona tinggi / jauh dari pantai</div>
+          </div>
+        </div>
+
+        <!-- 2. Sangat Rendah -->
+        <div class="legend-item">
+          <span class="swatch swatch-vlow"></span>
+          <div>
+            <div style="font-weight:600; color:#fff">Sangat Rendah</div>
+            <div style="font-size:0.75rem; color:var(--muted)">Potensi gelombang kecil</div>
+          </div>
+        </div>
+
+        <!-- 3. Rendah -->
+        <div class="legend-item">
+          <span class="swatch swatch-low"></span>
+          <div>
+            <div style="font-weight:600; color:#fff">Rendah</div>
+            <div style="font-size:0.75rem; color:var(--muted)">Waspada, elevasi sedang</div>
+          </div>
+        </div>
+
+        <!-- 4. Tinggi -->
+        <div class="legend-item">
+          <span class="swatch swatch-high"></span>
+          <div>
+            <div style="font-weight:600; color:#fff">Tinggi</div>
+            <div style="font-size:0.75rem; color:var(--muted)">Dekat pantai / dataran rendah</div>
+          </div>
+        </div>
+
+        <!-- 5. Sangat Tinggi -->
+        <div class="legend-item">
+          <span class="swatch swatch-vhigh"></span>
+          <div>
+            <div style="font-weight:600; color:#fff">Sangat Tinggi</div>
+            <div style="font-size:0.75rem; color:var(--muted)">Zona merah / langsung pantai</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. KONTAK DARURAT -->
+      <div class="emergency-section">
+        <div class="emergency-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          Kontak Darurat
+        </div>
+
+        <div class="contact-card bpbd-card">
+          <span class="org-name">BPBD Kab. Gunungsitoli</span>
+          <div class="org-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>(0733) 3367</div>
+          <div class="org-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>info@bpbd-gunungsitoli.go.id</div>
+          <div class="org-detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>JL Kedungpucang No 17, Sumut</div>
+          <div class="contact-actions">
+            <a href="tel:07333367" class="btn-contact btn-primary">Telepon</a>
+            <a href="mailto:info@bpbd-gunungsitoli.go.id" class="btn-contact btn-primary">Email</a>
+          </div>
+        </div>
+
+        <div class="contact-card posko-card">
+          <span class="org-name" style="color: var(--col-vhigh);">Posko Darurat (24 Jam)</span>
+          <a href="tel:115" class="btn-contact btn-danger"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>PANGGIL 115</a>
+        </div>
+      </div>
+
+    </aside>
+  </section>
+
+  <!-- ================= 3D SECTION ================= -->
+  <section id="tab-3d" class="map-panel" style="display:none">
+    <div class="map-card">
+      <div class="map-title">Visualisasi 3D – Elevasi</div>
+      <iframe src="PETA 3D KABUPATEN GUNUNGSITOLI/index.html" allowfullscreen loading="lazy"></iframe>
+    </div>
+    
+    <aside class="info-card">
+      <div class="info-header">Panel Kontrol 3D</div>
+      <p style="font-size:0.9rem; color:var(--muted); line-height:1.6;">
+        Visualisasi topografi Gunungsitoli dalam mode tiga dimensi.
+      </p>
+      <div style="margin-top:15px; padding:15px; background:rgba(34,211,238,0.05); border-radius:12px; border:1px solid var(--glass-border);">
+        <strong style="color:var(--accent); font-size:0.85rem; display:block; margin-bottom:8px;">Panduan Interaksi:</strong>
+        <ul style="margin:5px 0 0 20px; padding:0; font-size:0.8rem; color:var(--text);">
+          <li><strong>Rotate:</strong> Klik kiri + Tarik</li>
+          <li><strong>Zoom:</strong> Scroll Mouse</li>
+          <li><strong>Tilt:</strong> Klik kanan + Tarik</li>
+        </ul>
+      </div>
+      
+      <div class="emergency-section" style="margin-top:20px;">
+        <div class="emergency-header">Hubungi Bantuan</div>
+        <div class="contact-card bpbd-card">
+          <div class="org-name">BPBD Kab. Gunungsitoli</div>
+          <div class="contact-actions" style="margin-top:10px;">
+            <a href="tel:07333367" class="btn-contact btn-primary">Telepon</a>
+            <a href="mailto:info@bpbd-gunungsitoli.go.id" class="btn-contact btn-primary">Email</a>
+          </div>
+        </div>
+        <div class="contact-card posko-card"><a href="tel:115" class="btn-contact btn-danger">PANGGIL POSKO 115</a></div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ================= DATA DETAIL SECTION (MEWAH) ================= -->
+  <section id="tab-data" class="map-panel" style="display:none; grid-template-columns: 1fr;">
+    <div style="grid-column: 1 / -1; margin-bottom: 15px;">
+      <h2 style="margin:0; color: #fff; font-size: 1.8rem; letter-spacing: 0.5px;">Analisis Risiko Wilayah</h2>
+      <p style="margin:8px 0 0 0; color:var(--muted); font-size:0.95rem;">Data spasial detail per Kecamatan dengan indikator risiko real-time.</p>
+    </div>
+
+    <div class="data-container">
+      
+      <!-- CARD 1: GUNUNGSITOLI SELATAN (SANGAT TINGGI) -->
+      <div class="data-card risk-vhigh">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli Selatan</span>
+          <span class="risk-badge bg-vhigh">Sangat Tinggi</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-vhigh); font-weight:800;">95%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-vhigh); --target-width: 95%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">0-5 m</span><span class="stat-lbl">Elevasi Kritis</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="stat-val">0m</span><span class="stat-lbl">Garis Pantai</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: GUNUNGSITOLI UTARA (SANGAT TINGGI) -->
+      <div class="data-card risk-vhigh">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli Utara</span>
+          <span class="risk-badge bg-vhigh">Sangat Tinggi</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-vhigh); font-weight:800;">92%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-vhigh); --target-width: 92%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">0-5 m</span><span class="stat-lbl">Elevasi Kritis</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="stat-val">Open Sea</span><span class="stat-lbl">Terbuka</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: GUNUNGSITOLI (TINGGI) -->
+      <div class="data-card risk-high">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli (Pusat)</span>
+          <span class="risk-badge bg-high">Tinggi</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-high); font-weight:800;">78%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-high); --target-width: 78%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">5-15 m</span><span class="stat-lbl">Campuran</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <div><span class="stat-val">High</span><span class="stat-lbl">Kepadatan</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: GUNUNGSITOLI BARAT (RENDAH) -->
+      <div class="data-card risk-low">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli Barat</span>
+          <span class="risk-badge bg-low">Rendah</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-low); font-weight:800;">45%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-low); --target-width: 45%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">15-30 m</span><span class="stat-lbl">Sedang</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="stat-val">> 500m</span><span class="stat-lbl">Jarak Aman</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 5: GUNUNGSITOLI IDANOI (AMAN) -->
+      <div class="data-card risk-safe">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli Idanoi</span>
+          <span class="risk-badge bg-safe">Aman</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-safe); font-weight:800;">15%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-safe); --target-width: 15%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">> 50 m</span><span class="stat-lbl">Pegunungan</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="stat-val">Far</span><span class="stat-lbl">Inner Land</span></div>
+          </div>
+        </div>
+      </div>
+
+       <!-- CARD 6: GUNUNGSITOLI ALO'OA (RENDAH) -->
+       <div class="data-card risk-low">
+        <div class="card-header">
+          <span class="district-name">Gunungsitoli Alo'oa</span>
+          <span class="risk-badge bg-low">Rendah</span>
+        </div>
+        <div class="risk-section">
+          <div class="risk-label"><span>Indeks Risiko</span> <span style="color:var(--col-low); font-weight:800;">40%</span></div>
+          <div class="risk-track">
+            <div class="risk-fill" style="background: var(--col-low); --target-width: 40%;"></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <div><span class="stat-val">20-40 m</span><span class="stat-lbl">Bukit</span></div>
+          </div>
+          <div class="stat-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><span class="stat-val">> 300m</span><span class="stat-lbl">Jarak Pantai</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Script untuk handle Tab Switching
+  const btns=document.querySelectorAll('.tab-btn');
+  const tabs={
+    'tab-2d':document.getElementById('tab-2d'),
+    'tab-3d':document.getElementById('tab-3d'),
+    'tab-data':document.getElementById('tab-data')
+  };
+  
+  btns.forEach(b=>{
+    b.onclick=()=>{
+      btns.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      
+      Object.keys(tabs).forEach(k=>{
+        if(k===b.dataset.tab){
+          tabs[k].style.display='grid';
+          // Trigger animasi bar jika masuk tab data
+          if(k === 'tab-data') {
+             document.querySelectorAll('.risk-fill').forEach(el => {
+               el.style.animation = 'none';
+               el.offsetHeight; /* trigger reflow */
+               el.style.animation = 'fillBar 1.8s ease-out forwards';
+             });
+          }
+        } else {
+          tabs[k].style.display='none';
+        }
+      });
+    };
+  });
+</script>
+
+</body>
+</html>
